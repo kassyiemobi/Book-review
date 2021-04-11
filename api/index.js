@@ -2,21 +2,26 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const config = require("dotenv");
 const BookRoute = require("./server/routes/BookRoutes");
-const DiscussRoute = require("./server/routes/DiscussRoute");
 const CommentRoute = require("./server/routes/CommentRoutes");
 const UserRoute = require("./server/routes/UserRoutes");
+const cors = require('cors')
 config.config();
+
+
 
 const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
+app.use(cors());
+
 const port = process.env.PORT || 8000;
 
 app.use("/api/v1/books", BookRoute);
-app.use("/api/v1/discuss", DiscussRoute);
 app.use("/api/v1/users", UserRoute);
 app.use("/api/v1/comments", CommentRoute);
+app.use("/api/v1/signup", UserRoute)
+app.use("/api/v1/login", UserRoute)
 
 //root route
 app.get("*", (req, res) =>

@@ -1,4 +1,5 @@
 
+//const { DatabaseError } = require('sequelize/types');
 const  BookService =  require( '../services/BookService');
 const  Util = require( '../utils/Utils');
 
@@ -21,15 +22,24 @@ class BookController {
   }
 
   static async addBook(req, res) {
-    if (!req.body.title || !req.body.author || !req.body.description) {
+      const {title, author, description } = req.body
+    if (!title || !author || !description) {
       util.setError(400, 'Please provide complete details');
       return util.send(res);
     }
+  
+    //check if title already exists 
+    // const newTitle = await BookService.findOne({where: {newTitle : title} })
+    // if(newTitle == title) {
+    //     util.setError(400,'title already exists,search and join the conversation')
+
+    // }
     const newBook = req.body;
     try {
       const createdBook = await BookService.addBook(newBook);
       util.setSuccess(201, 'Book Added!', createdBook);
       return util.send(res);
+
     } catch (error) {
       util.setError(400, error.message);
       return util.send(res);

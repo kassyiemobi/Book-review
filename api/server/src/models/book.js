@@ -3,8 +3,9 @@ module.exports = (sequelize, DataTypes) => {
     title: {
       type: DataTypes.STRING,
       allowNull: false,
+      unique : true
     },
-    price: {
+    author: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -12,6 +13,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
+    discussion:{
+      type: DataTypes.STRING,
+      allowNull: false,
+    }
   });
   return Book;
 };

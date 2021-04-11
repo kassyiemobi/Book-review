@@ -1,4 +1,5 @@
-const  database = require("../src/models/Book");
+
+const database = require("../src/models/index.js");
 
 class BookService {
   static async getAllBooks() {
