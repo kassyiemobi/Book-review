@@ -7,10 +7,10 @@ module.exports = {
   // },
 
   development: {
-    database: "bookclub",
-    username: "postgres",
-    password: "Lookup0806Kelvin",
-    host: "127.0.0.1",
+    database: process.env.DB_NAME,
+    username: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    host: process.env.DB_HOST,
     dialect: "postgres",
   },
 

@@ -10,8 +10,8 @@ config.config();
 
 
 const app = express();
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 app.use(cors());
 
@@ -20,7 +20,6 @@ const port = process.env.PORT || 8000;
 app.use("/api/v1/books", BookRoute);
 app.use("/api/v1/users", UserRoute);
 app.use("/api/v1/comments", CommentRoute);
-app.use("/api/v1/signup", UserRoute)
 app.use("/api/v1/login", UserRoute)
 
 //root route
