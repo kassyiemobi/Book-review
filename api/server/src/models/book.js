@@ -13,10 +13,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    discussion:{
-      type: DataTypes.STRING,
-      allowNull: false,
-    }
   });
   return Book;
 };

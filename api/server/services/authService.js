@@ -16,7 +16,7 @@ class AuthService {
     
     //create new user
 
-    const newUser = await database.User.create(newUser)
+    const newUser = await database.User.create(data)
     const token = JWT.sign ({ id: user._id}, JWT_SECRET);
 
     //save new user
