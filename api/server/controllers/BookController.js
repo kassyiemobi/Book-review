@@ -22,8 +22,8 @@ class BookController {
   }
 
   static async addBook(req, res) {
-      const {title, author, description } = req.body
-    if (!title || !author || !description) {
+    const {title, author, description, discussion, ratings} = req.body
+    if (!title || !author || !description|| !discussion ||!ratings) {
       util.setError(400, 'Please provide complete details');
       return util.send(res);
     }

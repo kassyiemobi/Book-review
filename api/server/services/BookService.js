@@ -12,7 +12,7 @@ class BookService {
 
   static async addBook(newBook) {
     try {
-      return await database.Book.create(newBook);
+      return await database.Books.create(newBook);
     } catch (error) {
       throw error;
     }
