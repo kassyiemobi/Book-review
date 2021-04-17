@@ -22,28 +22,8 @@ class BookController {
   }
 
   static async addBook(req, res) {
-    const {title, author, description, discussion, ratings} = req.body
-    if (!title || !author || !description|| !discussion ||!ratings) {
-      util.setError(400, 'Please provide complete details');
+      const util = await BookService.addBook(req.body);
       return util.send(res);
-    }
-  
-    //check if title already exists 
-    // const newTitle = await BookService.findOne({where: {newTitle : title} })
-    // if(newTitle == title) {
-    //     util.setError(400,'title already exists,search and join the conversation')
-
-    // }
-    const newBook = req.body;
-    try {
-      const createdBook = await BookService.addBook(newBook);
-      util.setSuccess(201, 'Book Added!', createdBook);
-      return util.send(res);
-
-    } catch (error) {
-      util.setError(400, error.message);
-      return util.send(res);
-    }
   }
 
   static async updatedBook(req, res) {

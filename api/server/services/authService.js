@@ -2,31 +2,40 @@ const authController = require('../controllers/AuthController');
 const database =  require ("../src/models/index.js");
 const JWT = require ('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const Util = require('./../utils/utils');
+
+const util = new Util();
+
+
 
 
 class AuthService {
 
   static async signUp(data) {
-      //check if user exists
-    let user =  await database.User.findOne({ email: data.email});
+  console.log(database.User)
+      try {
+        
+        //check if user exists
+      let user = await database.User.findOne({where:{ email: data.email }});
+        if (user) return util.setError(400, "User already exists");
 
-    if (user) throw error( "Email already exists");
+        //create new user
 
-    console.log("@@@@@@@@@@@@",Object.keys(database))
-    
-    //create new user
+        const newUser = await database.User.create(data);
+        const token = JWT.sign({ id: newUser.id }, "JWT_SECRET");
 
-    const newUser = await database.User.create(data)
-    const token = JWT.sign ({ id: user._id}, JWT_SECRET);
-
-    //save new user
-    await newUser.save();
-
-    return (data = {
-        userId : user._id,
-        email: user.email,
-        token: token
-    });
+        //save new user
+        await newUser.save();
+          const result = {
+          userId: newUser.id,
+          email: newUser.email,
+          token: token,
+        };
+        return util.setSuccess(201, "User created", result);
+      } catch (error) {
+        console.log(error)
+        return util.setError(400, "Something went wrong");
+      }
 
   }
 

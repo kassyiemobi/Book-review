@@ -1,5 +1,8 @@
 
 const database = require("../src/models/index.js");
+const Util = require ("./../utils/utils")
+
+const util = new Util();
 
 class BookService {
   static async getAllBooks() {
@@ -10,11 +13,25 @@ class BookService {
     }
   }
 
-  static async addBook(newBook) {
+  static async addBook(data) {
     try {
-      return await database.Books.create(newBook);
+       const { title, author, description, discussion, ratings } = data;
+
+       if (!title || !author || !description || !discussion || !ratings) {
+        return util.setError(400, "Please provide complete details");
+       }
+
+      //check if title already exists
+      const Book = await database.Books.findOne({where: {title} })
+      if(Book) return util.setError(400,'title already exists,search and join the conversation');
+     
+
+      //create new book
+      const createdBook = await database.Books.create(data);
+
+      return util.setSuccess(201, 'Book Added!', createdBook);
     } catch (error) {
-      throw error;
+      return util.setError(400, error.message );
     }
   }
 
@@ -41,9 +58,9 @@ class BookService {
         where: { id: Number(id) },
       });
 
-      return theBook;
+     return util.setSuccess(201, "Book Added!", theBook);
     } catch (error) {
-      throw error;
+      return util.setError(400, error.message);
     }
   }
 
