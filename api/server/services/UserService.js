@@ -1,4 +1,4 @@
-const database = require( "../src/models/User");
+const database = require( "../src/models/users");
 
 class UserService {
   static async getAllUsers() {

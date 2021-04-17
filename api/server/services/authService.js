@@ -16,12 +16,12 @@ class AuthService {
       try {
         
         //check if user exists
-      let user = await database.User.findOne({where:{ email: data.email }});
+      let user = await database.Users.findOne({where:{ email: data.email }});
         if (user) return util.setError(400, "User already exists");
 
         //create new user
 
-        const newUser = await database.User.create(data);
+        const newUser = await database.Users.create(data);
         const token = JWT.sign({ id: newUser.id }, "JWT_SECRET");
 
         //save new user
