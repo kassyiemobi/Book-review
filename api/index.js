@@ -20,7 +20,6 @@ const port = process.env.PORT || 8000;
 app.use("/api/v1/books", BookRoute);
 app.use("/api/v1/users", UserRoute);
 app.use("/api/v1/comments", CommentRoute);
-app.use("/api/v1/login", UserRoute)
 
 //root route
 app.get("*", (req, res) =>

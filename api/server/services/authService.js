@@ -1,10 +1,11 @@
 const authController = require('../controllers/AuthController');
 const database =  require ("../src/models/index.js");
-const JWT = require ('jsonwebtoken');
+const jwt = require ('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const Util = require('./../utils/utils');
-
 const util = new Util();
+const catchAsync = require('./../utils/catchAsync')
+
 
 
 
@@ -22,7 +23,9 @@ class AuthService {
         //create new user
 
         const newUser = await database.Users.create(data);
-        const token = JWT.sign({ id: newUser.id }, "JWT_SECRET");
+        const token = jwt.sign({ id: newUser.id }, process.env.JWT_SECRET,{
+          expiresIn: process.env.JWT_EXPIRES_IN
+        });
 
         //save new user
         await newUser.save();
@@ -38,55 +41,32 @@ class AuthService {
       }
 
   }
+ 
+  static async signIn(data){
+    try{
+      const { email, password } = data;
+      
+      const user = await database.Users.findOne({where:{email, password }})
+      console.log(user);
+      return util.setSuccess(200, 'signIn successful')
+
+
+      
+
+
+
+
+    }catch(error ){
+    console.log("🚀 ~ file: authService.js ~ line 60 ~ AuthService ~ signIn ~ error", error)
+      
+      return util.setError(400, 'something went wrong');
+
+    }
+  }
 
 };
 
-//   static async updateUser(id, updateUser) {
-//     try {
-//       const bookToUpdate = await database.User.findOne({
-//         where: { id: Number(id) },
-//       });
 
-//       if (bookToUpdate) {
-//         await database.User.update(updateUser, { where: { id: Number(id) } });
-
-//         return updateUser;
-//       }
-//       return null;
-//     } catch (error) {
-//       throw error;
-//     }
-//   }
-
-//   static async getAUser(id) {
-//     try {
-//       const theUser = await database.User.findOne({
-//         where: { id: Number(id) },
-//       });
-
-//       return theUser;
-//     } catch (error) {
-//       throw error;
-//     }
-//   }
-
-//   static async deleteUser(id) {
-//     try {
-//       const bookToDelete = await database.User.findOne({
-//         where: { id: Number(id) },
-//       });
-
-//       if (bookToDelete) {
-//         const deletedUser = await database.User.destroy({
-//           where: { id: Number(id) },
-//         });
-//         return deletedUser;
-//       }
-//       return null;
-//     } catch (error) {
-//       throw error;
-//     }
-//   }
-// }
 
  module.exports =AuthService;
+
