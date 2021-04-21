@@ -12,7 +12,7 @@ const catchAsync = require('./../utils/catchAsync')
 
 class AuthService {
 
-  static async signUp(data) {
+  static async signup(data) {
   console.log(database.User)
       try {
         
