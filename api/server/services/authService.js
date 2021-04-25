@@ -1,7 +1,6 @@
 const authController = require('../controllers/AuthController');
 const database =  require ("../src/models/index.js");
-const jwt = require ('jsonwebtoken');
-const bcrypt = require('bcrypt');
+
 const Util = require('./../utils/utils');
 const util = new Util();
 const catchAsync = require('./../utils/catchAsync')
