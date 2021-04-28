@@ -19,16 +19,19 @@ module.exports = (sequelize, DataTypes) => {
       password: {
         type: DataTypes.STRING,
         allowNull: false,
+      
       },
+      
     },
     {
       hooks: {
-        beforeCreate: function (user) {
-          bcrypt.hash(user.password, 10, (err, res) => {
-            if (!err) {
-              user.password = res;
-            }
-          });
+        beforeCreate: (user, options) => {
+          {
+            user.password =
+              user.password && user.password != ""
+                ? bcrypt.hashSync(user.password, 10)
+                : "";
+          }
         },
       },
     }

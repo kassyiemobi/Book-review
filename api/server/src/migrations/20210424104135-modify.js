@@ -1,20 +1,19 @@
-const { DataTypes } = require("sequelize/types");
+
 
 module.exports = {
-  up(queryInterface, Sequelize) {
+  up: (queryInterface, Sequelize)=> {
     return Promise.all([
       queryInterface.addColumn(
         "Books", // table name
         "image_url", // new field name
         {
           type: Sequelize.STRING,
-          allowNull: false,
-        },
-      )
+          allowNull: true,
+        }),
     ]);
   },
 
-  down(queryInterface, Sequelize) {
+  down: (queryInterface) =>{
     // logic for reverting the changes
     return Promise.all([
       queryInterface.removeColumn("Books", "image_url"),

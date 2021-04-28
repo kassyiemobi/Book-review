@@ -20,6 +20,10 @@ module.exports = (sequelize, DataTypes) => {
     ratings:{
       type:DataTypes.STRING,
       allowNull: false,
+    },
+    image_url:{
+      type:DataTypes.STRING,
+      allowNull:false,
     }
   });
   return Book;

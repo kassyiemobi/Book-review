@@ -1,97 +1,67 @@
+const database = require('../src/models/index');
+const AppError = require('../utils/appError');
+const catchAsync = require('../utils/catchAsync');
 
-//const { DatabaseError } = require('sequelize/types');
-const  BookService =  require( '../services/BookService');
-const  Util = require( '../utils/Utils');
 
-const util = new Util();
+exports.createBook = async (req, res, next) =>{
+   const { title, author, description, discussion, ratings } = req.body;
 
-class BookController {
-  static async getAllBooks(req, res) {
-    try {
-      const allBooks = await BookService.getAllBooks();
-      if (allBooks.length > 0) {
-        util.setSuccess(200, 'Books retrieved', allBooks);
-      } else {
-        util.setSuccess(200, 'No book found');
-      }
-      return util.send(res);
-    } catch (error) {
-      util.setError(400, error);
-      return util.send(res);
-    }
+   if (!title || !author || !description || !discussion || !ratings) {
+     new AppError('Please provide complete details', 400)
+   }
+
+   //check if title already exists
+   const Book = await database.Books.findOne({ where: { title } });
+   if (Book)
+   return new AppError(
+       "title already exists,search and join the conversation",400
+     );
+
+   //create new book
+   const createdBook = await database.Books.create(req.body);
+   res.status(201).json({
+     status: "success",
+     data: {
+       book: createdBook,
+     },
+   });
+
+
+
+
+} 
+
+exports.getAllBooks = catchAsync (async(req, res, next) =>{
+
+  await database.Books.find()
+});
+
+exports.getABook = catchAsync (async(req, res, next) =>{
+  await database.Books.findOne({
+    where: { id: Number(id) },
+  });
+});
+
+exports.updateBook = catchAsync (async (req, res, next) =>{
+  const bookToUpdate = await database.Books.findOne({
+    where: { id: Number(id) },
+  });
+
+  if (bookToUpdate) {
+    await database.Books.update(updateBook, { where: { id: Number(id) } });
+
+    return updateBook;
   }
+});
 
-  static async addBook(req, res) {
-      const util = await BookService.addBook(req.body);
-      return util.send(res);
-  }
-
-  static async updatedBook(req, res) {
-    const alteredBook = req.body;
-    const { id } = req.params;
-    if (!Number(id)) {
-      util.setError(400, 'Please input a valid numeric value');
-      return util.send(res);
-    }
-    try {
-      const updateBook = await BookService.updateBook(id, alteredBook);
-      if (!updateBook) {
-        util.setError(404, `Cannot find book with the id: ${id}`);
-      } else {
-        util.setSuccess(200, 'Book updated', updateBook);
-      }
-      return util.send(res);
-    } catch (error) {
-      util.setError(404, error);
-      return util.send(res);
-    }
-  }
-
-  static async getABook(req, res) {
-    const { id } = req.params;
-
-    if (!Number(id)) {
-      util.setError(400, 'Please input a valid numeric value');
-      return util.send(res);
-    }
-
-    try {
-      const theBook = await BookService.getABook(id);
-
-      if (!theBook) {
-        util.setError(404, `Cannot find book with the id ${id}`);
-      } else {
-        util.setSuccess(200, 'Found Book', theBook);
-      }
-      return util.send(res);
-    } catch (error) {
-      util.setError(404, error);
-      return util.send(res);
-    }
-  }
-
-  static async deleteBook(req, res) {
-    const { id } = req.params;
-
-    if (!Number(id)) {
-      util.setError(400, 'Please provide a numeric value');
-      return util.send(res);
-    }
-
-    try {
-      const bookToDelete = await BookService.deleteBook(id);
+exports.deleteBook =catchAsync (async( req, res, next) => {
+      const bookToDelete = await database.Books.findOne({ where: { id: Number(id) } });
 
       if (bookToDelete) {
-        util.setSuccess(200, 'Book deleted');
-      } else {
-        util.setError(404, `Book with the id ${id} cannot be found`);
+        const deletedBook = await database.Books.destroy({
+          where: { id: Number(id) }
+        });
+        return deletedBook;
       }
-      return util.send(res);
-    } catch (error) {
-      util.setError(400, error);
-      return util.send(res);
-    }
-  }
-}
-
-module.exports= BookController;
+      return null;
+});

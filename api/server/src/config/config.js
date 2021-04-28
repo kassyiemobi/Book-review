@@ -30,9 +30,5 @@ module.exports = {
     dialect: "postgres",
   },
   
-//   cloudinary.config({ 
-//   cloud_name: 'babydev', 
-//   api_key: '858467384421376', 
-//   api_secret: 'eZ0W5vzcZROl4a_cr7AcAhMUucU' 
-// });
+  
 };
