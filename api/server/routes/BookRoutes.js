@@ -7,7 +7,7 @@ const upload = require("../utils/multer");
 const router = Router();
 
 // router.get("/", BookController.getAllBooks);
-// router.post("/", AuthController.protect,BookController.uploadImage, BookController.addBook);
+ router.post("/", AuthController.protect, BookController.createBook);
 // router.get("/:id", BookController.getABook);
 // router.put("/:id", AuthController.protect, BookController.updatedBook);
 // router.delete("/:id", BookController.deleteBook);
