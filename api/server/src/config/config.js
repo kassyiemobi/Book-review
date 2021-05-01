@@ -1,3 +1,5 @@
+const { required } = require("joi");
+
 require("dotenv").config();
 
 module.exports = {
@@ -30,5 +32,6 @@ module.exports = {
     // port: 5432,
     // dialect: "postgres",
     use_env_variable: "DATABASE_URL",
+    ssl:true
   },
 };
