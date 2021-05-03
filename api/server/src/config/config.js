@@ -32,9 +32,7 @@ module.exports = {
     // port: 5432,
     dialect: "postgres",
     use_env_variable: "DATABASE_URL",
-    ssl:true,
-     dialectOptions: {
-            ssl: true
-        }
+    
+    ssl: { rejectUnauthorized: false },
   },
 };
