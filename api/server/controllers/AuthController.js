@@ -2,10 +2,9 @@ const database = require("../src/models/index");
 const jwt = require("jsonwebtoken");
 const { promisify } = require("util");
 const catchAsync = require("../utils/catchAsync");
-const sendEmail = require('../utils/email')
-const crypto = require('crypto')
-const Sequelize = require("sequelize");
-const Op = Sequelize.Op;
+const sendEmail = require("../utils/email");
+const crypto = require("crypto");
+const bcrypt = require("bcrypt");
 
 const { regValidation, loginValidation } = require("../validators/validate");
 const AppError = require("../utils/appError");
@@ -29,10 +28,10 @@ exports.signup = catchAsync(async (req, res, next) => {
     last_name: req.body.last_name,
     email: req.body.email,
     password: req.body.password,
-    role: req.body.role
+    role: req.body.role,
   });
 
-  newUser = newUser.toJSON()
+  newUser = newUser.toJSON();
   delete newUser.password;
   const token = signToken(newUser.id);
 
@@ -62,6 +61,11 @@ exports.signin = catchAsync(async (req, res, next) => {
   if (!user) {
     return next(new AppError("incorrect email or password", 400));
   }
+   var passwordIsValid = bcrypt.compare(req.body.password, user.password);
+
+   if (!passwordIsValid) {
+     return next (new AppError('incorrect email or password', 401));
+   }
   //if everything is okay, generate a token
   const token = signToken(user.id);
   res.status(201).json({
@@ -84,126 +88,46 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
   //verify token
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
- 
+
   //CHECK IF USER STILL EXISTS
   const freshUser = User.findById(decoded.id);
   if (!freshUser) {
     return next(new AppError("user no longer exists", 401));
-  };
+  }
   req.user = freshUser;
 
-
-   next();
-  
+  next();
 });
- exports.authorizeUser  = (...roles) =>{
-   return (req, res, next) =>{
-     if(!roles.includes(req.user.role)){
-        return next(new AppError("you need permission", 403));
-     }
-next();
-   };
- };
-
-
-//  exports.forgotPassword = catchAsync (async (req, res, next) => {
-//    //get user based on posted Email
-//    const user = await database.User.findOne({ where : {email: req.body.email } });
-//    if (!user) {
-//      return next(new AppError("there is no user with that email address", 404));
-//    }
-//    //generate reset token
-//    const token = jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "2h" });
-
-//    //send to user email
-//    const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetpassword/${token}`
-//    const message =`forgot your password? please click on this link ${resetURL} .
-//    if this message was not initiated by you, please ignore this message`;
-//    try{
-//    await sendEmail({
-//      email: user.email,
-//      subject: 'password reset token',
-//      message: message
-//    });
-//    res.status(200).json({
-//      status:'success',
-//      message:'token sent to email'
-//    });
-//   }catch(err){
-//     user.passwordResetToken = undefined;
-//     user.passwordResetExpires = undefined;
-
-//     return next(new AppError('error sending email, try again later', 500))
-
-//   }
-//  });
-
- exports.forgotPassword= catchAsync( async(req, res, next) => {
-  //ensure that you have a user with this email
-  const email = await database.User.findOne({where: { email: req.body.email }});
-  if (!email) {
-  /**
-   * we don't want to tell attackers that an
-   * email doesn't exist, because that will let
-   * them use this form to find ones that do
-   * exist.
-   **/
-    return res.json({status: 'ok'});
-  }
-  /**
-   * Expire any tokens that were previously
-   * set for this user. That prevents old tokens
-   * from being used.
-   **/
-  await database.ResetToken.update({
-      used: 1
-    },
-    {
-      where: {
-        email: req.body.email
-      }
-  });
- 
-  //Create a random reset token
-  var fpSalt = crypto.randomBytes(64).toString('base64');
- 
-  //token expires after one hour
-  const expireDate = new Date();
-  expireDate.setDate(expireDate.getDate() + 1/24);
- 
-
-  //insert token data into DB
- const token =  await database.ResetToken.create({
-    email: req.body.email,
-    expiration: expireDate,
-    token: fpSalt,
-    used: 0
-  });
- 
-  //create email
-  const message = {
-    from: process.env.EMAIL_USERNAME,
-    to: req.body.email,
-    subject: "password Reset token",
-    text:
-      "To reset your password, please click the link below.\n\nhttps://" +
-      process.env.DOMAIN +
-      "/user/reset-password?token=" +
-      encodeURIComponent(token) +
-      "&email=" +
-      req.body.email,
+exports.authorizeUser = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(new AppError("you need permission", 403));
+    }
+    next();
   };
- 
-  //send email
-  await sendEmail(message, function (err, info) {
-     if(err) { console.log(err)}
-     else { console.log(info); }
-  });
- 
-  return res.json({status: 'ok'});
-});
+};
 
-exports.resetPassword = catchAsync(async(req, res, next) => {
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+  //get user based on posted Email
+  const { email } = req.body;
+  const user = await database.User.findOne({
+    where: { email: req.body.email },
+  });
+  if (!user) {
+    return next(new AppError("there is no user with that email address", 404));
+  }
+  //    //generate reset token
+  const {id, first_name} = user
+  const resetToken = jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: '2h',
+  });
+  const message = forgotPasswordMessage(first_name,resetToken)
+
+ await sendEmail();
+  res.status(200).json({ message: "check your email" });
+
+
+exports.resetPassword = catchAsync(async (req, res, next) => {
   /**
    * This code clears all expired tokens. You
    * should move this to a cronjob if you have a
@@ -227,101 +151,77 @@ exports.resetPassword = catchAsync(async(req, res, next) => {
   });
 
   if (!record) {
-    return next(new AppError( "Token has expired. Please try password reset again.",500))
-    };
- });
- exports.resetpassword = catchAsync(async(req, res, next) => {
-   if (req.body.password1 !== req.body.password2) {
-    return next(new AppError("Passwords do not match. Please try again.",500));
+    return next(
+      new AppError("Token has expired. Please try password reset again.", 500)
+    );
   }
- 
+});
+exports.resetpassword = catchAsync(async (req, res, next) => {
+  if (req.body.password1 !== req.body.password2) {
+    return next(new AppError("Passwords do not match. Please try again.", 500));
+  }
+
   /**
-  * Ensure password is valid (isValidPassword
-  * function checks if password is >= 8 chars, alphanumeric,
-  * has special chars, etc)
-  **/
+   * Ensure password is valid (isValidPassword
+   * function checks if password is >= 8 chars, alphanumeric,
+   * has special chars, etc)
+   **/
   if (!isValidPassword(req.body.password1)) {
-    return res.json({status: 'error', message: 'Password does not meet minimum requirements. Please try again.'});
+    return res.json({
+      status: "error",
+      message: "Password does not meet minimum requirements. Please try again.",
+    });
   }
- 
+
   var record = await ResetToken.findOne({
     where: {
       email: req.body.email,
-      expiration: { [Op.gt]: Sequelize.fn('CURDATE')},
+      expiration: { [Op.gt]: Sequelize.fn("CURDATE") },
       token: req.body.token,
-      used: 0
-    }
+      used: 0,
+    },
   });
- 
+
   if (record == null) {
-    return res.json({status: 'error', message: 'Token not found. Please try the reset password process again.'});
+    return res.json({
+      status: "error",
+      message: "Token not found. Please try the reset password process again.",
+    });
   }
- 
-  const  update= await ResetToken.update({
-      used: 1
+
+  const update = await ResetToken.update(
+    {
+      used: 1,
     },
     {
       where: {
-        email: req.body.email
-      }
-  });
- 
-  const newSalt = crypto.randomBytes(64).toString('hex');
-  const newPassword = crypto.pbkdf2Sync(req.body.password1, newSalt, 10000, 64, 'sha512').toString('base64');
- 
-  await User.update({
-    password: newPassword,
-    salt: newSalt
-  },
-  {
-    where: {
-      email: req.body.email
+        email: req.body.email,
+      },
     }
+  );
+
+  const newSalt = crypto.randomBytes(64).toString("hex");
+  const newPassword = crypto
+    .pbkdf2Sync(req.body.password1, newSalt, 10000, 64, "sha512")
+    .toString("base64");
+
+  await User.update(
+    {
+      password: newPassword,
+      salt: newSalt,
+    },
+    {
+      where: {
+        email: req.body.email,
+      },
+    }
+  );
+
+  return res.json({
+    status: "ok",
+    message: "Password reset. Please login with your new password.",
   });
- 
-  return res.json({status: 'ok', message: 'Password reset. Please login with your new password.'});
 });
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // class AuthController {
 //   static async signUp(req, res, next) {
