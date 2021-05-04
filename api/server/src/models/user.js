@@ -25,18 +25,18 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
     },
-    {
-      hooks: {
-        beforeCreate: (user, options) => {
-          {
-            user.password =
-              user.password && user.password != ""
-                ? bcrypt.hashSync(user.password, 10)
-                : "";
-          }
-        },
-      },
-    }
+    // {
+    //   hooks: {
+    //     beforeCreate: (user, options) => {
+    //       {
+    //         user.password =
+    //           user.password && user.password != ""
+    //             ? bcrypt.hashSync(user.password, 10)
+    //             : "";
+    //       }
+    //     },
+    //   },
+    // }
   );
   return User;
 };

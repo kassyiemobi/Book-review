@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 
 
-const sendEmail = async (options) => {
+exports.sendEmail= async (options) => {
   //create a transporter
   const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
@@ -22,4 +22,13 @@ const sendEmail = async (options) => {
   await transporter.sendMail(mailOptions);
 };
 
-module.exports = sendEmail;
+exports.forgotPasswordMessage = async (first_name, resetToken) => {
+  const message = {
+    subject: "Password Reset",
+    content: `Dear ${first_name}
+            You requested for a password reset. Click on the button below to confirm this action.</p>
+          ;' href='${URL}/reset-password?token=${resetToken}'>Reset Password`,
+  };
+  return message;
+};
+

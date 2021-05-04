@@ -5,6 +5,7 @@ const catchAsync = require("../utils/catchAsync");
 const sendEmail = require("../utils/email");
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
+const forgotPasswordMessage = require("../utils/email");
 
 const { regValidation, loginValidation } = require("../validators/validate");
 const AppError = require("../utils/appError");
@@ -22,17 +23,20 @@ exports.signup = catchAsync(async (req, res, next) => {
       status: "failed",
       error: validateInput.error.message,
     });
+  const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
   let newUser = await database.User.create({
     first_name: req.body.first_name,
     last_name: req.body.last_name,
     email: req.body.email,
-    password: req.body.password,
+    password: hashedPassword,
+    //await bcrypt.hash(password, 10),
     role: req.body.role,
   });
 
   newUser = newUser.toJSON();
   delete newUser.password;
+
   const token = signToken(newUser.id);
 
   res.status(201).json({
@@ -61,13 +65,16 @@ exports.signin = catchAsync(async (req, res, next) => {
   if (!user) {
     return next(new AppError("incorrect email or password", 400));
   }
-   var passwordIsValid = bcrypt.compare(req.body.password, user.password);
+  var passwordIsValid = await bcrypt.compare(req.body.password, user.password);
+  //const token = signToken(user.id);
+  const token = jwt.sign(JSON.stringify(user), process.env.JWT_SECRET);
 
-   if (!passwordIsValid) {
-     return next (new AppError('incorrect email or password', 401));
-   }
+  if (!passwordIsValid) {
+    // res.json({access : access})
+    return next(new AppError("incorrect email or password", 401));
+  }
   //if everything is okay, generate a token
-  const token = signToken(user.id);
+  // const token = signToken(user.id);
   res.status(201).json({
     status: "success",
     token,
@@ -80,7 +87,7 @@ exports.protect = catchAsync(async (req, res, next) => {
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
   ) {
-    token = req.headers.authorization;
+    token = req.headers.authorization.split(" ")[1];
   }
 
   if (!token) {
@@ -90,14 +97,17 @@ exports.protect = catchAsync(async (req, res, next) => {
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
   //CHECK IF USER STILL EXISTS
-  const freshUser = User.findById(decoded.id);
+  const freshUser = await database.User.findByPk(decoded.id);
+ 
   if (!freshUser) {
     return next(new AppError("user no longer exists", 401));
   }
-  req.user = freshUser;
+  // req.user = freshUser;
 
   next();
+  
 });
+
 exports.authorizeUser = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
@@ -117,203 +127,12 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     return next(new AppError("there is no user with that email address", 404));
   }
   //    //generate reset token
-  const {id, first_name} = user
+  const { id, first_name } = user;
   const resetToken = jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '2h',
+    expiresIn: "2h",
   });
-  const message = forgotPasswordMessage(first_name,resetToken)
+  const message = forgotPasswordMessage(first_name, resetToken);
 
- await sendEmail();
-  res.status(200).json({ message: "check your email" });
-
-
-exports.resetPassword = catchAsync(async (req, res, next) => {
-  /**
-   * This code clears all expired tokens. You
-   * should move this to a cronjob if you have a
-   * big site. We just include this in here as a
-   * demonstration.
-   **/
-  await ResetToken.destroy({
-    where: {
-      expiration: { [Op.lt]: Sequelize.fn("CURDATE") },
-    },
-  });
-
-  //find the token
-  const record = await ResetToken.findOne({
-    where: {
-      email: req.query.email,
-      expiration: { [Op.gt]: Sequelize.fn("CURDATE") },
-      token: req.query.token,
-      used: 0,
-    },
-  });
-
-  if (!record) {
-    return next(
-      new AppError("Token has expired. Please try password reset again.", 500)
-    );
-  }
+  await sendEmail(email, message);
+  return res.status(200).json({ message: "check your email" });
 });
-exports.resetpassword = catchAsync(async (req, res, next) => {
-  if (req.body.password1 !== req.body.password2) {
-    return next(new AppError("Passwords do not match. Please try again.", 500));
-  }
-
-  /**
-   * Ensure password is valid (isValidPassword
-   * function checks if password is >= 8 chars, alphanumeric,
-   * has special chars, etc)
-   **/
-  if (!isValidPassword(req.body.password1)) {
-    return res.json({
-      status: "error",
-      message: "Password does not meet minimum requirements. Please try again.",
-    });
-  }
-
-  var record = await ResetToken.findOne({
-    where: {
-      email: req.body.email,
-      expiration: { [Op.gt]: Sequelize.fn("CURDATE") },
-      token: req.body.token,
-      used: 0,
-    },
-  });
-
-  if (record == null) {
-    return res.json({
-      status: "error",
-      message: "Token not found. Please try the reset password process again.",
-    });
-  }
-
-  const update = await ResetToken.update(
-    {
-      used: 1,
-    },
-    {
-      where: {
-        email: req.body.email,
-      },
-    }
-  );
-
-  const newSalt = crypto.randomBytes(64).toString("hex");
-  const newPassword = crypto
-    .pbkdf2Sync(req.body.password1, newSalt, 10000, 64, "sha512")
-    .toString("base64");
-
-  await User.update(
-    {
-      password: newPassword,
-      salt: newSalt,
-    },
-    {
-      where: {
-        email: req.body.email,
-      },
-    }
-  );
-
-  return res.json({
-    status: "ok",
-    message: "Password reset. Please login with your new password.",
-  });
-});
-
-// class AuthController {
-//   static async signUp(req, res, next) {
-//     //Joi checks User Input
-//     const validateInput = regValidation.validate(req.body);
-//     if (validateInput.error) return res.status(400).json({
-//       status: "failed",
-//       error: validateInput.error.message,
-//     });
-//       try {
-
-//         //check if user exists
-//       let user = await database.Users.findOne({where:{ email:req.body.email }});
-//         if (user)  return res.status(400).json({
-//           status: "failed",
-//           error: "user exists already",
-//         });
-
-//         //create new user
-
-//         const newUser = await database.Users.create(req.body);
-//         const token = jwt.sign({ id: newUser.id }, process.env.JWT_SECRET,{
-//           expiresIn: process.env.JWT_EXPIRES_IN
-//         });
-
-//         //save new user
-//         await newUser.save();
-//           const result = {
-//           userId: newUser.id,
-//           email: newUser.email,
-//           token: token,
-//         };
-//       return res.json({
-//         status:"success",
-//         data:result,
-//       });
-//       } catch (error) {
-//         console.log(error)
-//         return res.status(400).json({
-//           status:"failed",
-//         error: "something went wrong",
-//         })
-//       }
-
-//   }
-//    static async signIn (req, res,next) {
-//      try {
-//        const validateInput = loginValidation.validate(req.body);
-//        if (validateInput.error)
-//          return res.status(400).json({
-//            status: "failed",
-//            error: validateInput.error.message,
-//          });
-
-//        const { email, password } = req.body;
-
-//        //if email and password exists
-//        if (!email || !password)
-//          return res.status(400).json({
-//            status: "failed",
-//            error: "please provide email and password!",
-//          });
-
-//        const user = await database.Users.findOne({where: {email, password}});
-
-//        if (user)
-//          return res.json({
-//            status: "success",
-//            message: "succesfully logged in",
-//          });
-//      } catch (error) {
-//        console.log(error);
-//        return res.status(400).json({
-//          status: "failed",
-//          error: "wrong username or password",
-//        });
-//      }
-
-// }
-//   static async protect( req, res, next) {
-//     let token ;
-//     if (req.headers.authorization && req.headers.authorization){
-//        token = req.headers.authorization
-//     }
-//     console.log(token);
-
-//     if(!token){
-//       util.setError(401,"you are not logged in");
-//       return util.send(res);
-//     }
-//     next();
-
-//   }
-
-// }
