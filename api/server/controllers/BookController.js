@@ -26,7 +26,7 @@ exports.createBook = catchAsync  (async (req, res, next) => {
   res.status(201).json({
     status: "success",
     data: {
-      book: Book,
+       Book,
     },
   });
 });
