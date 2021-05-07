@@ -1,5 +1,5 @@
 const {Router} = require('express');
-const AuthController = require('../controllers/authController');
+const AuthController = require('../controllers/AuthController');
 const BookController = require( "../controllers/BookController");
 const cloudinary = require("../utils/cloudinary");
 const upload = require("../utils/multer");
