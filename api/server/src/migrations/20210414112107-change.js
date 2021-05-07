@@ -11,7 +11,13 @@ module.exports = {
     ]);
   },
 
-  down: (queryInterface) => {
-    return Promise.all([queryInterface.changeColumn("Books", "title")]);
+  down: (queryInterface, Sequelize) => {
+    return Promise.all([
+      queryInterface.changeColumn("Books", "title", {
+        type: Sequelize.STRING,
+        allowNull: false,
+        unique: false,
+      }),
+    ]);
   },
 };
