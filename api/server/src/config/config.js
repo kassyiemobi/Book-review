@@ -1,6 +1,5 @@
-const { required } = require("joi");
-
 require("dotenv").config();
+const { required } = require("joi");
 
 module.exports = {
   // If using onine database
@@ -25,14 +24,13 @@ module.exports = {
   },
 
   production: {
-    // database: "bookclub",
-    // username: "postgres",
-    // password: "Lookup0806Kelvin",
-    // host: "127.0.0.1",
-    // port: 5432,
+    use_env_variable: DATABASE_URL,
     dialect: "postgres",
-    use_env_variable: "DATABASE_URL",
-    ssl: true,
-    ssl: { rejectUnauthorized: false },
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false, // <<<<<<< YOU NEED THIS TO FIX UNHANDLED REJECTION
+      },
+    },
   },
 };
