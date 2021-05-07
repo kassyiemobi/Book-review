@@ -4,25 +4,29 @@ const catchAsync = require("../utils/catchAsync");
 
 exports.createBook = catchAsync  (async (req, res, next) => {
   const { title, author, description, discussion, ratings } = req.body;
-  console.log(
-    "llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll"
-  );
+  
 
   if (!title || !author || !description || !discussion || !ratings) {
     new AppError("Please provide complete details", 400);
   }
-  console.log("-------------------------------------------------------");
 
   //check if title already exists
   const BookExist = await database.Books.findOne({ where: { title } });
-  if (!BookExist) {
+  console.log(
+    "llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll"
+  );
+  
+  if (BookExist) {
     return new AppError(
       "title already exists,search and join the conversation",
       400
     );
   }
+  console.log("-------------------------------------------------------");
   //create new book
   const Book = await database.Books.create(req.body);
+
+  console.log ('==========================================')
   res.status(201).json({
     status: "success",
     data: {

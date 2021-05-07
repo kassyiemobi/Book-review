@@ -97,13 +97,13 @@ exports.protect = catchAsync(async (req, res, next) => {
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
   //CHECK IF USER STILL EXISTS
-  const freshUser = await database.User.findByPk(decoded.id);
+  const currentUser = await database.User.findByPk(decoded.id);
  
-  if (!freshUser) {
+  if (!currentUser) {
     return next(new AppError("user no longer exists", 401));
   }
-  // req.user = freshUser;
-
+ req.user = currentUser;
+//grant access to protected route 
   next();
   
 });
