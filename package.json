@@ -8,7 +8,7 @@
     "start": "node ./api/index.js",
     "dev": "nodemon  ./api/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "db:ready": "npm-run-all db:undo db:migrate db:seed",
+    "db:ready": "npm-run-all db:undo db:migrate",
     "db:migrate": "sequelize db:migrate",
     "db:undo": "sequelize db:migrate:undo:all"
   },
