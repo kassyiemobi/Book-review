@@ -3,7 +3,7 @@ module.exports = (sequelize, DataTypes) => {
     title: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique : true
+      unique: true,
     },
     author: {
       type: DataTypes.STRING,
@@ -17,14 +17,14 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    ratings:{
-      type:DataTypes.STRING,
+    ratings: {
+      type: DataTypes.STRING,
       allowNull: false,
     },
-    image_url:{
-      type:DataTypes.STRING,
-      allowNull:true,
-    }
+    image_url: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
   });
   return Book;
 };

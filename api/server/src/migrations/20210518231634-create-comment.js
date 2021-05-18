@@ -1,24 +1,18 @@
 'use strict';
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('ResetTokens', {
+    await queryInterface.createTable('comments', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      email: {
+      comment: {
         type: Sequelize.STRING
       },
-      token: {
+      ratings: {
         type: Sequelize.STRING
-      },
-      expiration: {
-        type: Sequelize.DATE
-      },
-      used: {
-        type: Sequelize.INTEGER
       },
       createdAt: {
         allowNull: false,
@@ -31,6 +25,6 @@ module.exports = {
     });
   },
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('ResetTokens');
+    await queryInterface.dropTable('comments');
   }
 };

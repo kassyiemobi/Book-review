@@ -16,15 +16,17 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         unique: true,
       },
-      role:{
-        type:DataTypes.ENUM("admin", "user"),
+      role: {
+        type: DataTypes.ENUM("admin", "user"),
+        default: user,
+        allowNull: true,
       },
 
       password: {
         type: DataTypes.STRING,
         allowNull: false,
       },
-    },
+    }
     // {
     //   hooks: {
     //     beforeCreate: (user, options) => {
