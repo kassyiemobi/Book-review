@@ -39,3 +39,29 @@ exports.getAllComments = catchAsync(async (req, res, next) => {
 
   });
 });
+
+exports.updateComment = catchAsync(async(req, res, next) =>{
+    const commentToUpdate = await database.comments.findOne({
+      where: { id: Number(id) },
+    });
+
+    if (commentToUpdate) {
+      await database.comments.update(updateComment, { where: { id: Number(id) } });
+
+      return this.updateComment;
+    }
+});
+
+exports.deleteComment = catchAsync(async (req, res, next) => {
+  const commentToDelete = await database.comments.findOne({
+    where: { id: Number(id) },
+  });
+
+  if (commentToDelete) {
+    const deletedComment = await database.comments.destroy({
+      where: { id: Number(id) },
+    });
+    return deletedComment;
+  }
+  return null;
+});
