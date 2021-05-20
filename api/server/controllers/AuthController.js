@@ -25,7 +25,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     });
   const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
-  let newUser = await database.User.create({
+  let newUser = await database.Users.create({
     first_name: req.body.first_name,
     last_name: req.body.last_name,
     email: req.body.email,
@@ -61,7 +61,7 @@ exports.signin = catchAsync(async (req, res, next) => {
     return next(new AppError(" please provide email or password!", 400));
   }
   //check is email or password is correct
-  const user = await database.User.findOne({ where: { email } });
+  const user = await database.Users.findOne({ where: { email } });
   if (!user) {
     return next(new AppError("incorrect email or password", 400));
   }
@@ -97,7 +97,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
   //CHECK IF USER STILL EXISTS
-  const currentUser = await database.User.findByPk(decoded.id);
+  const currentUser = await database.Users.findByPk(decoded.id);
  
   if (!currentUser) {
     return next(new AppError("user no longer exists", 401));
@@ -120,7 +120,7 @@ exports.authorizeUser = (...roles) => {
 exports.forgotPassword = catchAsync(async (req, res, next) => {
   //get user based on posted Email
   const { email } = req.body;
-  const user = await database.User.findOne({
+  const user = await database.Users.findOne({
     where: { email: req.body.email },
   });
   if (!user) {
