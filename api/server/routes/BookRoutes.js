@@ -10,6 +10,6 @@ router.get("/", BookController.getAllBooks);
 router.post("/", AuthController.protect, BookController.createBook);
 router.get("/:id", BookController.getABook);
 router.patch("/:id", AuthController.protect, BookController.updateBook);
-router.delete("/:id", BookController.deleteBook);
+router.delete("/:id", AuthController.protect, AuthController.authorizeUser,BookController.deleteBook);
 
 module.exports= router;

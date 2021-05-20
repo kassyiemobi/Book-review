@@ -1,12 +1,14 @@
 const Router = require("express");
 const CommentController = require("../controllers/CommentController");
+const AuthController = require("../controllers/AuthController");
 
 const router = Router();
 
-router.get("bookId/comments", CommentController.getAllComments);
-router.post("bookId/comments", CommentController.addComment);
-router.get("bookId/comments/:id", CommentController.getAComment);
-router.put("bookId/comments/:id", CommentController.updateComment);
-router.delete("bookId/comments/:id", CommentController.deleteComment);
+ 
+router.get("/", CommentController.getAllComments);
+router.post("/", AuthController.protect, CommentController.addComment);
+router.get("/:id", CommentController.getAComment);
+router.put("/:id",AuthController.protect, CommentController.updateComment);
+router.delete("/:id",AuthController.protect, AuthController.authorizeUser, CommentController.deleteComment);
 
 module.exports = router;

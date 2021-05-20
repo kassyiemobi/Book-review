@@ -12,9 +12,11 @@ exports.addComment = catchAsync (async(req, res, next)=> {
         },
     })
 }) ;
+console.log('llllllllllllllllllllllllllllllllllllllllllllllllllllllllll')
+
 exports.getAComment = catchAsync(async(req, res, next) =>{
-    const comment = await database.comments.findByPk({
-      where: { id: Number(id) },
+  const comment = await database.comments.findByPk({
+    where: { id: Number(id) },
     });
     if (!comment) {
       return next(new AppError("not found", 401));
