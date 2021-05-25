@@ -2,7 +2,6 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const config = require("dotenv");
 const BookRoute = require("./server/routes/BookRoutes");
-const CommentRoute = require("./server/routes/CommentRoutes");
 const UserRoute = require("./server/routes/UserRoutes");
 const cors = require('cors')
 const AppError = require('./server/utils/appError');
@@ -29,7 +28,6 @@ const port = process.env.PORT || 8000;
 
 app.use("/api/v1/books", BookRoute);
 app.use("/api/v1/users", UserRoute);
-app.use("/api/v1/comments", CommentRoute);
 app.use("/api/v1/users/forgotpassword", UserRoute);
 
 //root route
